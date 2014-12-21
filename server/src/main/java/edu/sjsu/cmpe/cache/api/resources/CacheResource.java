@@ -3,6 +3,7 @@ package edu.sjsu.cmpe.cache.api.resources;
 import java.util.List;
 
 import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
@@ -21,42 +22,58 @@ import edu.sjsu.cmpe.cache.repository.CacheInterface;
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 public class CacheResource {
-    private final CacheInterface cache;
+	private final CacheInterface cache;
 
-    /**
-     * CacheResource constructor
-     * 
-     * @param cache
-     *            a InMemoryCache instance
-     */
-    public CacheResource(CacheInterface cache) {
-        this.cache = cache;
-    }
+	/**
+	 * CacheResource constructor
+	 * 
+	 * @param cache
+	 *            a InMemoryCache instance
+	 */
+	public CacheResource(CacheInterface cache) {
+		this.cache = cache;
+	}
 
-    @GET
-    @Path("{key}")
-    @Timed(name = "get-entry")
-    public Entry get(@PathParam("key") LongParam key) {
-        return cache.get(key.get());
-    }
+	@GET
+	@Path("{key}")
+	@Timed(name = "get-entry")
+	public Entry get(@PathParam("key") LongParam key) {
+		return cache.get(key.get());
+	}
 
-    @GET
-    @Timed(name = "view-all-entries")
-    public List<Entry> getAll() {
-        return cache.getAll();
-    }
+	@GET
+	@Timed(name = "view-all-entries")
+	public List<Entry> getAll() {
+		return cache.getAll();
+	}
 
-    @PUT
-    @Path("{key}/{value}")
-    @Timed(name = "add-entry")
-    public Response put(@PathParam("key") LongParam key,
-            @PathParam("value") String value) {
-        Entry entry = new Entry();
-        entry.setKey(key.get());
-        entry.setValue(value);
+	@PUT
+	@Path("{key}/{value}")
+	@Timed(name = "add-entry")
+	public Response put(@PathParam("key") LongParam key,
+			@PathParam("value") String value) {
+		//Lab4 changes start
+		Entry entry = null; 
+		entry = cache.get(key.get());
+		if(entry != null){
+			entry.setValue(value);
+		}
+		else{
+			entry = new Entry();
+			entry.setKey(key.get());
+			entry.setValue(value);
+		}
+		//Lab4 changes end
+		cache.save(entry);
+		return Response.status(200).build();
+	}
 
-        cache.save(entry);
-
-        return Response.status(200).build();
-    }
+	//Lab 4 start
+	@DELETE
+	@Path("{key}")
+	@Timed(name = "delete-entry")
+	public Entry delete(@PathParam("key") LongParam key) {
+		return cache.delete(key.get());
+	}
+	//Lab 4 end
 }
